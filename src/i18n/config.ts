@@ -1,0 +1,14 @@
+export const locales = ["pl", "en"] as const;
+export type Locale = (typeof locales)[number];
+
+export const defaultLocale: Locale = "pl";
+
+export const LOCALE_COOKIE = "NEXT_LOCALE";
+
+export function isLocale(value: unknown): value is Locale {
+  return locales.some((locale) => locale === value);
+}
+
+export function resolveLocale(value: string | undefined): Locale {
+  return isLocale(value) ? value : defaultLocale;
+}

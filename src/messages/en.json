@@ -1,0 +1,19 @@
+{
+  "Metadata": {
+    "title": "Slotwise",
+    "description": "Appointment calendar and SMS reminders for your salon."
+  },
+  "Home": {
+    "title": "Slotwise",
+    "tagline": "Appointment calendar and SMS reminders for your salon.",
+    "cta": "Coming soon: calendar"
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "pl": "Polski",
+    "en": "English"
+  },
+  "ThemeToggle": {
+    "label": "Switch theme"
+  }
+}

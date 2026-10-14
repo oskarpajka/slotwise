@@ -1,0 +1,19 @@
+{
+  "Metadata": {
+    "title": "Slotwise",
+    "description": "Kalendarz wizyt i przypomnienia SMS dla Twojego salonu."
+  },
+  "Home": {
+    "title": "Slotwise",
+    "tagline": "Kalendarz wizyt i przypomnienia SMS dla Twojego salonu.",
+    "cta": "Wkrótce: kalendarz"
+  },
+  "LocaleSwitcher": {
+    "label": "Język",
+    "pl": "Polski",
+    "en": "English"
+  },
+  "ThemeToggle": {
+    "label": "Przełącz motyw"
+  }
+}
