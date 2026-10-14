@@ -1,14 +1,36 @@
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { ThemeProvider } from "@/components/theme-provider";
+import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Slotwise",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Metadata");
+  return { title: t("title"), description: t("description") };
+}
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const locale = await getLocale();
+
   return (
-    <html lang="pl">
-      <body>{children}</body>
+    <html lang={locale} suppressHydrationWarning>
+      <body>
+        <NextIntlClientProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }
