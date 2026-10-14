@@ -15,7 +15,7 @@ Read `SPEC.md` and `GLOSSARY.md` before any work. The spec is the source of trut
 
 - TypeScript strict. No `any`. No non-null assertions without a comment explaining why.
 - Domain names from `GLOSSARY.md` in code, files and UI copy.
-- Server code: every action starts with `requireOwner()`, then Zod validation.
+- Server code: every action starts with `requireOwner()`, then Zod validation. One exception: the SMS delivery callback route, see `docs/adr/0001-sms-callback-route-is-not-owner-authenticated.md`.
 - Money as integer grosze; time as UTC `timestamptz`, displayed in `Europe/Warsaw`.
 - No user-facing strings in components; use next-intl messages (`pl` and `en`).
 - Small, deep modules: simple interface, logic hidden behind it, tested through that interface.
@@ -23,7 +23,7 @@ Read `SPEC.md` and `GLOSSARY.md` before any work. The spec is the source of trut
 ## Safety
 
 - Never commit secrets, `.env` files, database dumps or real personal data. Seed data is fake.
-- Dev, tests and CI always use `SMS_PROVIDER=outbox`. Never send a real SMS unless Oskar asks in the current session.
+- Dev, tests and CI always use `SMS_PROVIDER=dry-run`. Never send a real SMS unless Oskar asks in the current session.
 - Never run destructive database commands against anything except the local dev database.
 
 ## Git
