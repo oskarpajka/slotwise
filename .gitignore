@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets: never commit. The example file is the only exception.
+.env
+.env.*
+!.env.example
+
+# Database dumps and backups
+*.sql.gz
+*.dump
+*.bak
+*.backup
+backups/
+dumps/
+pgdata/
+
+# Logs and OS files
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Local agent settings
+.claude/settings.local.json
