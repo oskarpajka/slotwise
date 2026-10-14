@@ -29,14 +29,14 @@ Read `SPEC.md` and `GLOSSARY.md` before any work. The spec is the source of trut
 ## Git
 
 - Conventional commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
-- One branch and one pull request per ticket. PR description: summary, how it was tested, screenshots for UI changes.
-- Name the branch `feat/<ticket number>-<short-name>` (or `fix/`, `docs/`, `chore/`), cut from an up-to-date `main`.
-- Finish a ticket in this order: commit, `git push -u origin <branch>`, then open the pull request with `gh pr create --base main`. A commit that is not pushed is invisible to Oskar.
-- Open exactly one pull request per branch, from the CLI. Put `Closes #<ticket number>` in the description so the issue closes on merge.
-- Base the pull request on `main`. If the ticket depends on an unmerged one, stop and tell Oskar instead of stacking branches.
-- Do not merge your own pull request. Oskar merges.
-- After Oskar merges: `git fetch -p`, check out `main`, `git pull --ff-only`, delete the local branch, and confirm the issue is closed.
-- If `git checkout` refuses because of "local changes" and the diff shows no content change (line-ending noise from `core.autocrlf`), check with `git diff --ignore-cr-at-eol --stat`, then use `git checkout -f`. Never discard real changes.
+- One branch and one pull request per ticket, named `feat/<ticket number>-<short-name>` (or `fix/`, `docs/`, `chore/`), cut from an up-to-date `main`.
+- Finish a ticket in this order:
+  1. Commit.
+  2. `git push -u origin <branch>`. An unpushed commit is invisible to Oskar.
+  3. `gh pr create --base main` from the CLI. Description: summary, how it was tested, screenshots for UI changes, and `Closes #<ticket number>`.
+- A ticket that depends on an unmerged one waits: tell Oskar and let him merge the blocker first.
+- Oskar merges. After the merge: `git fetch -p`, check out `main`, `git pull --ff-only`, delete the local branch, and confirm the issue is closed.
+- Checkout refuses with "local changes" but `git diff --ignore-cr-at-eol --stat` is empty: it is `core.autocrlf` noise, so `git checkout -f` is safe.
 
 ## Writing style
 
