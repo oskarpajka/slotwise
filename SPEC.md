@@ -21,7 +21,7 @@ It is also a public portfolio project, so code quality, tests and documentation 
 - Availability: working hours per weekday, breaks, blocked days, shown greyed out on the calendar; warn when booking outside them.
 - SMS: confirmation, reminder before the visit, change notice, cancellation notice. Suggested templates the owner can rewrite. Final text shown in the booking dialog and editable for that one message before sending. Delivery status per message.
 - RODO (GDPR) tools: client export (JSON and PDF), client delete, inactive-clients review list, link to the salon's privacy notice.
-- Polish and English UI. Light and dark theme. Installable PWA.
+- Polish and English UI. Light and dark theme. Installable PWA. Offline shows a clear "No connection" page; client data is never cached on the device.
 
 ### Out of scope (do not build)
 
@@ -49,7 +49,7 @@ Verify the current stable version and current docs of every tool before using it
 | Dates | Store `timestamptz` in UTC, display in `Europe/Warsaw`. Temporal polyfill or date-fns-tz |
 | Phone numbers | libphonenumber-js, stored as E.164 |
 | Background jobs | pg-boss (queue in Postgres), run in a separate worker process from the same codebase |
-| SMS | `SmsProvider` interface; `SmsApiProvider` (SMSAPI.pl) and `OutboxProvider` (stores messages, sends nothing) |
+| SMS | `SmsProvider` interface; `SmsApiProvider` (SMSAPI.pl) and `DryRunProvider` (stores messages in the outbox, sends nothing) |
 | i18n | next-intl, locales `pl` (default) and `en` |
 | Tests | Vitest (unit, integration against a real Postgres in Docker), Playwright (end-to-end, desktop and mobile viewports) |
 | Code quality | Biome (lint + format), pnpm |
@@ -64,14 +64,14 @@ Money is stored as integer grosze (12000 = 120,00 zl). All timestamps are `times
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `clients` | id, first_name, last_name, phone_e164, email, notes, tags, sms_opt_out, health_info (encrypted), health_consent_at, archived_at, created_at, updated_at | Archive for normal removal; hard delete for RODO requests |
+| `clients` | id, first_name, last_name, phone_e164 (optional, not unique), email, notes, tags, sms_opt_out, health_info (encrypted), health_consent_at, archived_at, created_at, updated_at | Archive for normal removal; hard delete for RODO requests |
 | `services` | id, name, price_grosze, duration_min, color, is_active, sort_order | Never hard-deleted once used |
 | `appointments` | id, client_id, service_id, starts_at, ends_at, status, price_grosze, duration_min, notes, created_at, updated_at | price and duration are snapshots |
-| `working_hours` | weekday, opens_at, closes_at | One row per open weekday |
-| `time_blocks` | id, starts_at, ends_at, reason | Breaks, holidays, days off |
+| `working_hours` | id, weekday, opens_at, closes_at | One row per shift; several rows per weekday allowed (a lunch break is the gap). Local `Europe/Warsaw` times |
+| `time_blocks` | id, starts_at, ends_at, reason | One-off holidays and days off. Creating one over existing appointments lists them first and changes none |
 | `sms_messages` | id, appointment_id, client_id, type, body, status, provider_message_id, error, scheduled_for, sent_at, created_at | Outbox and history. type: confirmation, reminder, changed, cancelled. status: queued, sent, delivered, failed, cancelled |
 | `settings` | business_name, timezone, reminder_hours_before, sms_templates, sender_name, strip_polish_chars, privacy_notice_url, retention_years | Single row |
-| `audit_log` | id, at, action, entity, entity_id | Login, export, delete, settings change. No personal data in the log |
+| `audit_log` | id, at, action, entity, entity_id | Security and privacy events only: login, failed login (count, no username), 2FA reset, export, erase, settings change. No personal data in the log |
 
 ### Double-booking guard (required, in a migration)
 
@@ -94,26 +94,33 @@ The UI must catch the constraint error and show a friendly message.
 
 - Booking saves the appointment and enqueues SMS jobs in the same database transaction. The worker sends them. A failing provider must never block or roll back a booking.
 - Retries with backoff; after the last failure, status `failed` shown on the appointment.
-- Reminder jobs are scheduled at booking time for `starts_at - reminder_hours_before`. Moving or cancelling an appointment cancels and re-creates them.
-- No SMS to clients with `sms_opt_out = true`; the UI explains why.
+- Reminder jobs are scheduled at booking time for `starts_at - reminder_hours_before`. Moving or cancelling an appointment cancels and re-creates them. If that time is already past (booked too close to the visit), no reminder is created and the booking dialog says so.
+- After a move, show the same editable-message dialog as booking, with "Send" and "Move without SMS". Reminders are re-created either way.
+- No SMS to clients with `sms_opt_out = true` or without a phone; the SMS step is shown disabled with the reason, and no reminder job is created.
+- The booking dialog always offers "Book without SMS". It stores no `confirmation` message.
+- The final `body` is stored when the message is created. A later template edit never changes queued messages. A move rebuilds the reminder from the current template, and the move dialog says the one-off edit is lost.
+- `strip_polish_chars` is applied when the message is built, so the preview, counter, stored `body` and Outbox show exactly what is sent.
 - Templates: default Polish and English text for each type, editable in Settings, with "restore default". Placeholders: `{imie}`, `{data}`, `{godzina}`, `{usluga}`, `{firma}`. Live preview with real client data.
 - Character and segment counter in the editor. Polish diacritics switch SMS to Unicode (about 70 characters per segment instead of 160). Setting `strip_polish_chars` converts them to plain letters before sending.
 - Messages contain service information only, never promotions.
-- Delivery status updated by the provider's callback or by polling, whichever SMSAPI supports best (check their current docs).
-- Provider chosen by `SMS_PROVIDER=smsapi|outbox`. Dev, tests and demo always use `outbox`. An Outbox page lists stored messages.
+- Delivery status is updated by SMSAPI's callback (`notify_url`, GET). The route is public: secret token in the path plus a source IP check, see ADR 0001. SMSAPI statuses are mapped to ours in one tested function. A message with no callback stays `sent` and the UI shows "sent, not confirmed". When the SMS phase starts, read the rest of the SMSAPI docs (status list, any status-check endpoint) and reconsider polling.
+- The provider's HTTP calls are tested against recorded fixtures. In CI, fake callbacks hit the route handler directly. Real-provider tests with a temporary tunnel happen only in sessions where Oskar asks for them.
+- Provider chosen by `SMS_PROVIDER=smsapi|dry-run`. Dev, tests and demo always use `dry-run`. An Outbox page lists stored messages from every provider.
 
 ---
 
 ## 5. Security and privacy
 
 - Every server action and route handler calls one `requireOwner()` helper first, then validates input with Zod.
-- Two-factor authentication required for the owner.
+- Two-factor authentication required for the owner. Backup codes are shown once at setup. A server CLI command (`pnpm owner:reset-2fa`) is the last-resort recovery and writes an `audit_log` entry.
 - Rate-limit the login route. Secure, httpOnly, sameSite session cookies.
 - Postgres is never exposed outside the Docker network.
 - Secrets only in `.env`; `.env.example` documents every variable. `.gitignore` blocks `.env*` (except the example), dumps and backups.
+- `pnpm seed:demo` creates about 20 fake clients and a week of appointments for screenshots and the README video. It refuses to run in production or against a non-local database. Playwright uses its own minimal fixtures.
 - Seed data uses fake names and numbers only. Real client data never enters the repository.
 - Backups: nightly `pg_dump`, encrypted with `restic`, sent off-server. `docs/deployment.md` contains a tested restore procedure.
-- RODO features: export one client (JSON + PDF), hard delete one client and their SMS history, inactive-clients list (no visit in `retention_years`), privacy notice link in Settings.
+- `HEALTH_INFO_KEY` is backed up separately and offline (a password manager), never in the restic repository. The restore test must prove a restored health field decrypts with that key.
+- RODO features: export one client (JSON + PDF), hard delete one client with their appointments and SMS history, inactive-clients list (no `completed` appointment in `retention_years` and none upcoming; see GLOSSARY.md), privacy notice link in Settings.
 
 ---
 
@@ -121,7 +128,8 @@ The UI must catch the constraint error and show a friendly message.
 
 - Mobile first. Every screen usable at 375 px width. Phone default calendar view: day or agenda. Desktop default: week.
 - Create an appointment in at most 3 taps or clicks from the calendar: pick slot, pick client (search or quick-add), pick service.
-- Quick-add client inside the booking dialog.
+- Quick-add client inside the booking dialog. It warns when another client has the same phone number, and shows who, but allows it.
+- Stale screens: the overlap error shows a friendly message and the calendar refetches. Refetch on window focus plus a manual refresh. No live push in v1.
 - Client search by name or phone from anywhere (command palette on desktop).
 - Visual style: restrained and editorial. Neutral palette, one accent, generous spacing, strong typography. No gradients or neon.
 
@@ -131,7 +139,7 @@ The UI must catch the constraint error and show a friendly message.
 
 Each phase ends with passing CI, updated docs and a git tag. Stop after each phase for review.
 
-1. **Foundation (v0.1.0).** Next.js, TypeScript strict, Biome, Tailwind, shadcn/ui, Docker Compose with Postgres, Drizzle with first migration, Vitest and Playwright set up, CI green. Done when `docker compose up` serves an empty app.
+1. **Foundation (v0.1.0).** Next.js, TypeScript strict, Biome, Tailwind, shadcn/ui, Docker Compose with Postgres, Drizzle with first migration, Vitest and Playwright set up, CI green. Done when `docker compose up` serves an empty app. Tickets in order: (1) Next.js, strict TypeScript, Biome, `pnpm check`; (2) Tailwind, shadcn/ui, next-intl skeleton; (3) Docker Compose with `app`, `postgres`, `caddy` and `.env.example` (`worker` joins in the SMS phase); (4) Drizzle and first migration with `btree_gist`, integration tests on real Postgres; (5) Playwright and GitHub Actions.
 2. **Auth.** Better Auth, seeded owner, login page, 2FA, protected layout, rate limit. Done when every page redirects to login when signed out.
 3. **Clients and services (v0.2.0).** CRUD, search, archive, phone validation, encrypted health field. Done when 20 fake clients can be added and found on a phone.
 4. **Appointments and calendar (v0.3.0).** Calendar views, create, move, resize, statuses, overlap constraint, client history page. Done when a full week can be booked on a phone.

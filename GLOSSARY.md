@@ -18,8 +18,9 @@ Shared domain language for Slotwise. Use these words in code, files and UI copy.
 
 ## Availability
 
-- **Working hours**: the opening and closing time for each open weekday.
-- **Block**: a time range where nothing can be booked, such as a break, a holiday or a day off.
+- **Working hours**: the shifts for each open weekday.
+- **Shift**: one opening and closing time on a weekday. A weekday can have several, so a lunch break is the gap between two shifts.
+- **Block**: a one-off time range where nothing can be booked, such as a holiday or a day off. Recurring breaks are gaps between shifts, not blocks. Adding a block over existing appointments lists them first and changes none of them.
 - **Outside hours**: a booking that falls outside working hours or inside a block. The app warns but does not forbid it.
 
 ## SMS
@@ -29,13 +30,13 @@ Shared domain language for Slotwise. Use these words in code, files and UI copy.
 - **Template**: the editable default text for one message type, with placeholders.
 - **Placeholder**: a token such as `{imie}` that is replaced with real data when the message is built.
 - **Segment**: one billable SMS part. Polish diacritics switch a message to Unicode, which shortens a segment.
-- **Provider**: the service that delivers messages. `smsapi` sends real SMS. `outbox` stores them and sends nothing.
+- **Provider**: the service that delivers messages. `smsapi` sends real SMS. `dry-run` only stores them in the outbox and sends nothing. Not to be confused with the Outbox itself, which holds messages from every provider.
 - **Opt-out**: a client flag meaning no SMS may be sent to them.
 
 ## Privacy (RODO)
 
 - **Health info**: a separate, encrypted field on a client, with a consent date. Never mixed into general notes.
 - **Archive**: the normal way to remove a client from daily use. Data is kept.
-- **Erase**: the hard delete of a client and their SMS history, for a RODO request.
-- **Inactive client**: a client with no visit within the retention period.
+- **Erase**: the hard delete of a client, their appointments and their SMS history, for a RODO request. The audit log stays because it holds no personal data.
+- **Inactive client**: a client with no `completed` appointment within the retention period and no future `scheduled` appointment. `no_show` and `cancelled` do not count as a visit. A client who never had a visit is measured from their creation date.
 - **Export**: a client's data as JSON and PDF, for a RODO request.
