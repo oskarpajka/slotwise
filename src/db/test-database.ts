@@ -49,22 +49,18 @@ export async function createTestDatabase(): Promise<TestDatabase> {
   const pool = new Pool({ connectionString: url.toString(), max: 4 });
   const db = createDrizzle(pool);
 
-  try {
-    await migrate(db, { migrationsFolder: "./drizzle" });
-  } catch (error) {
+  const close = async () => {
     await pool.end();
     await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);
     await admin.end();
+  };
+
+  try {
+    await migrate(db, { migrationsFolder: "./drizzle" });
+  } catch (error) {
+    await close();
     throw error;
   }
 
-  return {
-    db,
-    pool,
-    close: async () => {
-      await pool.end();
-      await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);
-      await admin.end();
-    },
-  };
+  return { db, pool, close };
 }
