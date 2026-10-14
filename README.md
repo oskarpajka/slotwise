@@ -35,6 +35,8 @@ pnpm dev
 
 Run `pnpm check` before every commit. It runs Biome, the type check and the tests. The integration tests need `pnpm db:up`.
 
+Browser tests: `pnpm exec playwright install chromium` once, then `pnpm build` and `pnpm e2e`. They run at desktop and 375 px widths against the production build.
+
 ## Docs
 
 - `SPEC.md`: product and technical spec
