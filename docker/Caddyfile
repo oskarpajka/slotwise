@@ -1,0 +1,6 @@
+# SITE_ADDRESS is ":80" locally. In production set it to the domain name
+# and Caddy gets an HTTPS certificate on its own.
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}

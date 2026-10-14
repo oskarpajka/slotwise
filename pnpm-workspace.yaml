@@ -1,0 +1,6 @@
+# Dependency build scripts are denied by default. None of these packages
+# needs its install script: they ship prebuilt binaries.
+allowBuilds:
+  "@parcel/watcher": false
+  "@swc/core": false
+  esbuild: false

@@ -15,8 +15,8 @@
     "format": "biome check --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "db:up": "docker compose up -d --wait",
-    "db:down": "docker compose down",
+    "db:up": "docker compose -f compose.yaml -f compose.dev.yaml up -d --wait postgres",
+    "db:down": "docker compose -f compose.yaml -f compose.dev.yaml down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "check": "pnpm lint && pnpm typecheck && pnpm test"
