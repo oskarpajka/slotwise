@@ -1,0 +1,7 @@
+# Development only. Adds a loopback-bound Postgres port so pnpm, drizzle-kit
+# and the integration tests can reach the database from the host.
+# Use: docker compose -f compose.yaml -f compose.dev.yaml up -d --wait postgres
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
