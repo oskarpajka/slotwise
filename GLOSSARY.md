@@ -4,8 +4,16 @@ Shared domain language for Slotwise. Use these words in code, files and UI copy.
 
 ## People
 
-- **Owner**: the one person who logs in and runs the business.
+- **Owner**: the one person who logs in and runs the business. Not "user" or "admin".
+- **Operator**: the person who runs the server and its command-line tools, such as creating the owner or resetting their second factor. Never logs in to the app.
 - **Client**: a customer of the business. Never a user of the app. Not "customer" or "patient".
+
+## Access
+
+- **Second factor**: a 6-digit code from an authenticator app on the owner's phone, asked after the password.
+- **Backup code**: a one-time code shown once when the second factor is set up, for when the phone is not at hand.
+- **Trusted device**: a device where the second factor was confirmed recently, so for a while only the password is asked.
+- **Audit log**: the record of security and privacy events, such as logins and erasures. Never holds personal data.
 
 ## Booking
 
