@@ -15,7 +15,7 @@ Read `SPEC.md` and `GLOSSARY.md` before any work. The spec is the source of trut
 
 - TypeScript strict. No `any`. No non-null assertions without a comment explaining why.
 - Domain names from `GLOSSARY.md` in code, files and UI copy.
-- Server code: every action starts with `requireOwner()`, then Zod validation. One exception: the SMS delivery callback route, see `docs/adr/0001-sms-callback-route-is-not-owner-authenticated.md`.
+- Server code: every action starts with `requireOwner()`, then Zod validation. Two route exceptions: the SMS delivery callback route (`docs/adr/0001-sms-callback-route-is-not-owner-authenticated.md`) and the Better Auth route (`docs/adr/0002-auth-route-is-not-owner-authenticated.md`).
 - Money as integer grosze; time as UTC `timestamptz`, displayed in `Europe/Warsaw`.
 - No user-facing strings in components; use next-intl messages (`pl` and `en`).
 - Small, deep modules: simple interface, logic hidden behind it, tested through that interface.

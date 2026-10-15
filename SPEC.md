@@ -1,6 +1,6 @@
 # Slotwise: product and technical spec
 
-Status: approved for implementation. Owner: Oskar Pajka. Last updated: 2026-10-14.
+Status: approved for implementation. Owner: Oskar Pajka. Last updated: 2026-10-15.
 
 Slotwise is a self-hosted web app for a single business owner (first user: a permanent makeup salon in Poland) to manage clients, services and appointments on a calendar, and to send SMS confirmations and reminders to clients. Clients never log in or see the app.
 
@@ -12,7 +12,8 @@ It is also a public portfolio project, so code quality, tests and documentation 
 
 ### In scope (v1.0)
 
-- One owner account. Sign-up disabled. Owner created by a seed script from env vars.
+- One owner account. Sign-up disabled. The operator creates the owner with `pnpm owner:create` from env vars. The owner sets up a second factor (authenticator app) on first login.
+- Account page: change password, sign out all other devices, regenerate backup codes, set up the second factor again.
 - Clients: first name, last name, phone, email, notes, tags, SMS opt-out, separate encrypted health info field with consent date.
 - Client page: current appointment ("in progress now"), upcoming, past; totals; no-show count.
 - Services: name, price, duration, color, active or archived, sort order.
@@ -42,7 +43,7 @@ Verify the current stable version and current docs of every tool before using it
 | Framework | Next.js 16, App Router, Server Actions, TypeScript strict |
 | Database | PostgreSQL |
 | ORM | Drizzle ORM + drizzle-kit (SQL migrations committed) |
-| Auth | Better Auth with Drizzle adapter, email + password, two-factor plugin (required for the owner) |
+| Auth | Better Auth with Drizzle adapter, email + password, two-factor plugin (TOTP and backup codes, required for the owner), admin plugin used only server-side by the operator's command-line tools |
 | UI | Tailwind CSS v4 + shadcn/ui |
 | Calendar | Schedule-X (MIT core). Confirm which plugins are free before use; only free plugins allowed. Fallback: FullCalendar standard (MIT) packages |
 | Forms and validation | React Hook Form + Zod (same schema on client and in server actions) |
@@ -71,7 +72,7 @@ Money is stored as integer grosze (12000 = 120,00 zl). All timestamps are `times
 | `time_blocks` | id, starts_at, ends_at, reason | One-off holidays and days off. Creating one over existing appointments lists them first and changes none |
 | `sms_messages` | id, appointment_id, client_id, type, body, status, provider_message_id, error, scheduled_for, sent_at, created_at | Outbox and history. type: confirmation, reminder, changed, cancelled. status: queued, sent, delivered, failed, cancelled |
 | `settings` | business_name, timezone, reminder_hours_before, sms_templates, sender_name, strip_polish_chars, privacy_notice_url, retention_years | Single row |
-| `audit_log` | id, at, action, entity, entity_id | Security and privacy events only: login, failed login (count, no username), 2FA reset, export, erase, settings change. No personal data in the log |
+| `audit_log` | id, at, action, entity, entity_id | Security and privacy events only: `login_succeeded`, `login_failed` (one row per attempt), `logout`, `two_factor_enabled`, `two_factor_reset`, `backup_code_used`, `password_changed`, `sessions_revoked`, export, erase, settings change. No personal data in the log: no email, no IP address |
 
 ### Double-booking guard (required, in a migration)
 
@@ -111,9 +112,12 @@ The UI must catch the constraint error and show a friendly message.
 
 ## 5. Security and privacy
 
-- Every server action and route handler calls one `requireOwner()` helper first, then validates input with Zod.
-- Two-factor authentication required for the owner. Backup codes are shown once at setup. A server CLI command (`pnpm owner:reset-2fa`) is the last-resort recovery and writes an `audit_log` entry.
-- Rate-limit the login route. Secure, httpOnly, sameSite session cookies.
+- Every server action, page, layout and route handler calls one `requireOwner()` helper first, then validates input with Zod. It checks the session and that a second factor is set up; without one it redirects to the setup page. Two route exceptions: the SMS callback (ADR 0001) and the Better Auth route (ADR 0002). `proxy.ts` only checks that a session cookie exists and redirects to login; it is never the real check.
+- Two-factor authentication required for the owner: an authenticator app (TOTP), set up on first login, plus 10 backup codes shown once at setup. Better Auth locks the second factor for 15 minutes after 10 wrong codes.
+- Sessions last 7 days and are extended while in use. A trusted device skips the code for 30 days. Changing the password signs out other devices.
+- Password: at least 12 characters, no composition rules. The same Zod rule in `owner:create`, `owner:reset-password` and the Account page.
+- Operator recovery (command-line tools in a `cli` Docker image, run with `docker compose run --rm cli ...`): `owner:reset-password` sets a new password; `owner:reset-2fa` removes the second factor so the next login sets it up again. Both sign out every session and write an `audit_log` entry. A stolen but still signed-in phone can also be signed out from the Account page.
+- Rate-limit sign-in and the second-factor endpoints (Better Auth, in memory). Caddy sets `X-Real-IP` and Better Auth reads only that header. Secure, httpOnly, sameSite session cookies.
 - Postgres is never exposed outside the Docker network.
 - Secrets only in `.env`; `.env.example` documents every variable. `.gitignore` blocks `.env*` (except the example), dumps and backups.
 - `pnpm seed:demo` creates about 20 fake clients and a week of appointments for screenshots and the README video. It refuses to run in production or against a non-local database. Playwright uses its own minimal fixtures.
@@ -140,7 +144,7 @@ The UI must catch the constraint error and show a friendly message.
 Each phase ends with passing CI, updated docs and a git tag. Stop after each phase for review.
 
 1. **Foundation (v0.1.0).** Next.js, TypeScript strict, Biome, Tailwind, shadcn/ui, Docker Compose with Postgres, Drizzle with first migration, Vitest and Playwright set up, CI green. Done when `docker compose up` serves an empty app. Tickets in order: (1) Next.js, strict TypeScript, Biome, `pnpm check`; (2) Tailwind, shadcn/ui, next-intl skeleton; (3) Docker Compose with `app`, `postgres`, `caddy` and `.env.example` (`worker` joins in the SMS phase); (4) Drizzle and first migration with `btree_gist`, integration tests on real Postgres; (5) Playwright and GitHub Actions.
-2. **Auth.** Better Auth, seeded owner, login page, 2FA, protected layout, rate limit. Done when every page redirects to login when signed out.
+2. **Auth.** Better Auth, seeded owner, login page, 2FA, protected layout, rate limit, Account page, operator recovery tools. Done when every page redirects to login when signed out, and to second-factor setup until one is set up.
 3. **Clients and services (v0.2.0).** CRUD, search, archive, phone validation, encrypted health field. Done when 20 fake clients can be added and found on a phone.
 4. **Appointments and calendar (v0.3.0).** Calendar views, create, move, resize, statuses, overlap constraint, client history page. Done when a full week can be booked on a phone.
 5. **Availability.** Working hours, breaks, blocked days on the calendar.
