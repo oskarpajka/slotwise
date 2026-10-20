@@ -34,6 +34,9 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-slotwise}:${POSTGRES_PASSWORD:-slotwise}@postgres:5432/${POSTGRES_DB:-slotwise}
+      # No default on purpose: the app refuses to sign anyone in without it.
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:8080}
     depends_on:
       migrate:
         condition: service_completed_successfully

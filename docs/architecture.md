@@ -38,6 +38,14 @@ If a migration fails, `app` never starts.
 - `postgres` publishes nothing. `app` and `migrate` reach it as `postgres:5432` on the Compose network.
 - For development, `compose.dev.yaml` adds a Postgres port bound to `127.0.0.1` so pnpm, drizzle-kit and the tests can connect. `pnpm db:up` uses it. Never use it on a server.
 
+## Sign-in and access
+
+- `src/proxy.ts` sends a request without a session cookie to `/login`. It never checks that the cookie is valid.
+- `requireOwner()` in `src/lib/auth/server.ts` is the real check. It reads the session from the database and redirects to `/login` without one. Every page, layout, server action and route handler calls it first.
+- `/api/auth/[...all]` is the Better Auth route (ADR 0002). Only `/sign-in/email` and `/sign-out` answer; every other auth path answers 404, sign-up and the admin plugin included. The list lives in `EXPOSED_AUTH_PATHS` in `src/lib/auth/auth.ts`.
+- `pnpm owner:create` creates the one owner account through the admin plugin, server-side.
+- Each sign-in attempt and each sign-out writes an `audit_log` row with no email and no IP address.
+
 ## Configuration
 
 All variables are listed in `.env.example`. Secrets stay in `.env`, which git ignores.
