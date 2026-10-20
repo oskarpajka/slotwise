@@ -1,21 +1,16 @@
 import { randomBytes } from "node:crypto";
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
-import * as schema from "./schema";
+import { createDatabase, type Database } from "./client";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 export type TestDatabase = {
-  db: ReturnType<typeof createDrizzle>;
+  db: Database;
   pool: Pool;
   close: () => Promise<void>;
 };
-
-function createDrizzle(pool: Pool) {
-  return drizzle({ client: pool, schema });
-}
 
 /**
  * Creates a throwaway database on the local dev Postgres, applies every
@@ -47,7 +42,7 @@ export async function createTestDatabase(): Promise<TestDatabase> {
 
   url.pathname = `/${name}`;
   const pool = new Pool({ connectionString: url.toString(), max: 4 });
-  const db = createDrizzle(pool);
+  const db = createDatabase(pool);
 
   const close = async () => {
     await pool.end();
