@@ -15,5 +15,18 @@
   },
   "ThemeToggle": {
     "label": "Switch theme"
+  },
+  "Login": {
+    "appName": "Slotwise",
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "invalidCredentials": "Wrong email or password. Try again.",
+    "unknown": "Something went wrong. Try again in a moment."
+  },
+  "SignOut": {
+    "label": "Sign out"
   }
 }

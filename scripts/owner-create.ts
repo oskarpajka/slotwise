@@ -3,6 +3,11 @@ import { connectDatabase } from "@/db/client";
 import { createAuth } from "@/lib/auth/auth";
 import { createOwner } from "@/lib/auth/owner";
 
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL is not set. Copy .env.example to .env.");
+  process.exit(1);
+}
+
 const { db, pool } = connectDatabase();
 
 try {

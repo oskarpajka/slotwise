@@ -8,12 +8,16 @@ export function createDatabase(pool: Pool): Database {
   return drizzle({ client: pool, schema });
 }
 
-/** Connects to DATABASE_URL. The pool opens connections on first query. */
+/**
+ * Uses DATABASE_URL. The pool connects on the first query, so `next build`
+ * can import this without a database.
+ */
 export function connectDatabase(): { db: Database; pool: Pool } {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is not set. Copy .env.example to .env.");
-  }
-  const pool = new Pool({ connectionString });
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  // Without a listener, an idle connection dropped by a Postgres restart
+  // crashes the process. The pool replaces the connection on the next query.
+  pool.on("error", (error) =>
+    console.error("Idle database connection lost", error),
+  );
   return { db: createDatabase(pool), pool };
 }

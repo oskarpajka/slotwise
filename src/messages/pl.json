@@ -15,5 +15,18 @@
   },
   "ThemeToggle": {
     "label": "Przełącz motyw"
+  },
+  "Login": {
+    "appName": "Slotwise",
+    "title": "Zaloguj się",
+    "email": "E-mail",
+    "password": "Hasło",
+    "submit": "Zaloguj się",
+    "submitting": "Logowanie…",
+    "invalidCredentials": "Nieprawidłowy e-mail lub hasło. Spróbuj ponownie.",
+    "unknown": "Coś poszło nie tak. Spróbuj ponownie za chwilę."
+  },
+  "SignOut": {
+    "label": "Wyloguj się"
   }
 }
