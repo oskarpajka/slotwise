@@ -19,11 +19,21 @@ I came across multiple booking tools but I found them very expensive. Most of th
 
 ## Built with
 
-(To be decided)
+- React + Vite: the user interface
+- TypeScript: the whole project
+- Hono: the backend API
+- Cloudflare Workers: where the backend runs
+- Cloudflare D1 (SQLite): the database
+- Drizzle ORM: database schema and queries
+- Zod: validating incoming data
+- ESLint + Prettier: code quality
 
 ## Setup and run
 
-(Coming soon)
+1. Requirements (Node 22+)
+2. npm install
+3. npx wrangler d1 migrations apply slotwise --local
+4. npm run dev, then open `http://localhost:5173`
 
 ## Screenshots
 
