@@ -14,7 +14,7 @@ function App() {
           throw new Error(`Response status: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result = (await response.json()) as { ok: boolean }
         if (result.ok === true) {
           setMessage('API: ok')
         } else {
@@ -25,7 +25,7 @@ function App() {
         setMessage('API: down')
       }
     }
-    checkHealth()
+    void checkHealth()
   }, [])
 
   return (
