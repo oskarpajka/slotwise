@@ -2,6 +2,8 @@
 
 A booking and client manager for small companies.
 
+Live demo: https://slotwise.oskar-pajka16.workers.dev/
+
 ## Why I'm building it
 I came across multiple booking tools but I found them very expensive. Most of them also contain too much unnecessary features. That is why I am building Slotwise. I want there to exist an open-source, free, unbloated alternative that is available to everyone.
 
