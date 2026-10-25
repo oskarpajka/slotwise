@@ -1,18 +1,16 @@
 {
-	"name": "slotwise",
-	"main": "./worker/index.ts",
-	"compatibility_date": "2026-10-25",
-	"assets": {
-		"not_found_handling": "single-page-application",
-		"run_worker_first": [
-			"/api/*"
-		]
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "slotwise",
-			"database_id": "3cb84b09-6cc7-4ac7-ac37-8ff78c38a82d"
-		}
-	]
+  "name": "slotwise",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-10-25",
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "slotwise",
+      "database_id": "3cb84b09-6cc7-4ac7-ac37-8ff78c38a82d",
+    },
+  ],
 }
