@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import { ClientList } from './ClientList.tsx'
 
 function App() {
   const [message, setMessage] = useState('checking...')
@@ -31,6 +32,7 @@ function App() {
   return (
     <>
       <p>{message}</p>
+      <ClientList />
     </>
   )
 }
