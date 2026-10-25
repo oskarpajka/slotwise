@@ -9,8 +9,8 @@ const app = new Hono<{ Bindings: Env }>()
 const createClientSchema = z.object({
     firstName: z.string().trim().min(1).max(100),
     lastName: z.string().trim().min(1).max(100),
-    phone: z.string().trim().max(20).optional(),
-    notes: z.string().trim().max(2000).optional()
+    phone: z.string().trim().max(20).transform((value) => (value === '' ?  null : value)).optional(),
+    notes: z.string().trim().max(2000).transform((value) => (value === '' ?  null : value)).optional()
 })
 
 app.get('/api/health', (c) => c.json({ ok: true }))
