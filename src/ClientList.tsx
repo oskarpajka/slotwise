@@ -1,14 +1,5 @@
 import { useEffect, useState } from 'react'
-
-type Client = {
-  id: number
-  firstName: string
-  lastName: string
-  phone: string | null
-  notes: string | null
-  createdAt: string
-  updatedAt: string
-}
+import type { Client } from './types.ts'
 
 export function ClientList() {
   const [clients, setClients] = useState<Client[]>([])
@@ -21,9 +12,7 @@ export function ClientList() {
 
       try {
         const response = await fetch(url)
-        if (!response.ok) {
-          throw new Error(`Response status: ${response.status}`)
-        }
+        if (!response.ok) throw new Error(`Response status: ${response.status}`)
 
         const result = (await response.json()) as Client[]
         setClients(result)
