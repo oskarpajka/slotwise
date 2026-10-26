@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { Client } from './types.ts'
 
-export function AddClientForm() {
+type AddClientFormProps = { onCreated: (client: Client) => void }
+
+export function AddClientForm({ onCreated }: AddClientFormProps) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
@@ -23,7 +25,7 @@ export function AddClientForm() {
       if (!response.ok) throw new Error('Failed to add a new client')
 
       const result = (await response.json()) as Client
-      console.log(result)
+      onCreated(result)
 
       setFirstName('')
       setLastName('')
