@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import { ClientList } from './ClientList.tsx'
+import { AddClientForm } from './AddClientForm.tsx'
 
 function App() {
   const [message, setMessage] = useState('checking...')
@@ -33,6 +34,7 @@ function App() {
     <>
       <p>{message}</p>
       <ClientList />
+      <AddClientForm />
     </>
   )
 }
