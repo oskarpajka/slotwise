@@ -14,3 +14,23 @@ export const clients = sqliteTable('clients', {
     .$defaultFn(() => new Date())
     .$onUpdateFn(() => new Date()),
 })
+
+export const admins = sqliteTable('admins', {
+  id: integer({ mode: 'number' }).primaryKey({ autoIncrement: true }),
+  email: text().notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+})
+
+export const sessions = sqliteTable('sessions', {
+  id: text().primaryKey(),
+  adminId: integer('admin_id', { mode: 'number' })
+    .notNull()
+    .references(() => admins.id, { onDelete: 'cascade' }),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+})
