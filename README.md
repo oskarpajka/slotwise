@@ -35,6 +35,8 @@ I came across multiple booking tools but I found them very expensive. Most of th
 3. npx wrangler d1 migrations apply slotwise --local
 4. npm run dev, then open `http://localhost:5173`
 
+Or open it in GitHub Codespaces (Code > Codespaces): steps 2 and 3 run automatically, so you only need `npm run dev`.
+
 ## Screenshots
 
 (Coming soon)

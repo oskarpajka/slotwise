@@ -1,0 +1,26 @@
+{
+  "name": "Slotwise",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+
+  // Runs once when the Codespace is created or rebuilt:
+  // installs packages and sets up the local D1 database.
+  "postCreateCommand": "npm install && npx wrangler d1 migrations apply slotwise --local",
+
+  // Vite dev server. Start it yourself with: npm run dev
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Slotwise",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
