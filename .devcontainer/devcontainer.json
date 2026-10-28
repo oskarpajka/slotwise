@@ -4,7 +4,8 @@
 
   // Runs once when the Codespace is created or rebuilt:
   // installs packages and sets up the local D1 database.
-  "postCreateCommand": "npm install && npx wrangler d1 migrations apply slotwise --local",
+  // CI=true makes wrangler skip its "continue? (Y/n)" question.
+  "postCreateCommand": "npm install && CI=true npx wrangler d1 migrations apply slotwise --local",
 
   // Vite dev server. Start it yourself with: npm run dev
   "forwardPorts": [5173],
