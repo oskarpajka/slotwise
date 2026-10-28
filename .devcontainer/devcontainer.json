@@ -2,10 +2,12 @@
   "name": "Slotwise",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
 
-  // Runs once when the Codespace is created or rebuilt:
-  // installs packages and sets up the local D1 database.
-  // CI=true makes wrangler skip its "continue? (Y/n)" question.
-  "postCreateCommand": "npm install && CI=true npx wrangler d1 migrations apply slotwise --local",
+  // Runs once when the Codespace is created or rebuilt: installs packages
+  // and sets up the local database, printing each step (see setup.sh).
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+
+  // Runs every time you open the Codespace: prints a ready/missing checklist.
+  "postAttachCommand": "bash .devcontainer/status.sh",
 
   // Vite dev server. Start it yourself with: npm run dev
   "forwardPorts": [5173],
